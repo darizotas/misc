@@ -1,8 +1,8 @@
 """Module that acts as a wrapper for Windows Wlan API.
 
 Copyright 2013 Dario B. darizotas at gmail dot com
-This software is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 
-Unported License. http://creativecommons.org/licenses/by-nc-sa/3.0/
+This software is licensed under a new BSD License. 
+Unported License. http://opensource.org/licenses/BSD-3-Clause
 """
 
 # windll and oledll

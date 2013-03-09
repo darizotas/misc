@@ -1,12 +1,12 @@
 """Proof of concept to get the SSID of the current Wlan connection on a Windows XP.
 
-It uses the wlanapi.wlanapiwrapper module.
+It uses the wlanapiwrapper module.
 
 Copyright 2013 Dario B. darizotas at gmail dot com
 This software is licensed under a new BSD License. 
 Unported License. http://opensource.org/licenses/BSD-3-Clause
 """
-from wlanapi.wlanapiwrapper import *
+from wlanapiwrapper import *
 import sys
 
 class WlanConnError(Exception):
@@ -91,17 +91,18 @@ class WlanConnInfo:
     return connected
 
 # Main
-if sys.argv[1:]:
-  # Retrieves the ssid name.
-  ssid = sys.argv[1]
-  try:
-    info = WlanConnInfo()
-    if info.isConnected(ssid):
-      print "Associated to %s" % ssid
-    else:
-      print "Not associated to %s" % ssid
-  except WlanConnError as err:
-    print err
-    
-else:
-  print 'Usage: WlanConnInfo.py SSID'
+if __name__ == '__main__':
+  if sys.argv[1:]:
+    # Retrieves the ssid name.
+    ssid = sys.argv[1]
+    try:
+      info = WlanConnInfo()
+      if info.isConnected(ssid):
+        print "Associated to %s" % ssid
+      else:
+        print "Not associated to %s" % ssid
+    except WlanConnError as err:
+      print err
+      
+  else:
+    print 'Usage: WlanConnInfo.py SSID'

@@ -1,6 +1,13 @@
 package com.darizotas.metadatastrip;
 
 import java.io.File;
+import java.io.IOException;
+
+import com.drew.imaging.ImageMetadataReader;
+import com.drew.imaging.ImageProcessingException;
+import com.drew.metadata.Directory;
+import com.drew.metadata.Metadata;
+import com.drew.metadata.Tag;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -39,11 +46,6 @@ public class FileDetailFragment extends Fragment {
 
 		if (getArguments().containsKey(ARG_ITEM_ID)) {
 			mFile = new File(getArguments().getString(ARG_ITEM_ID));
-			// Load the dummy content specified by the fragment
-			// arguments. In a real-world scenario, use a Loader
-			// to load content from a content provider.
-//			mItem = DummyContent.ITEM_MAP.get(getArguments().getString(
-//					ARG_ITEM_ID));
 		}
 	}
 
@@ -55,8 +57,21 @@ public class FileDetailFragment extends Fragment {
 
 		// Show the dummy content as text in a TextView.
 		if (mFile != null) {
-			((TextView) rootView.findViewById(R.id.file_detail))
-					.setText(mFile.getName());
+			try {
+				Metadata metadata = ImageMetadataReader.readMetadata(mFile);
+				String fileDetails = "";
+				for (Directory directory : metadata.getDirectories()) {
+				    for (Tag tag : directory.getTags()) {
+				        fileDetails += tag.toString();
+				    }
+				}
+				((TextView) rootView.findViewById(R.id.file_detail))
+					.setText(fileDetails);
+			} catch (IOException e) {
+				e.printStackTrace();
+			} catch (ImageProcessingException e) {
+				e.printStackTrace();
+			}
 		}
 
 		return rootView;

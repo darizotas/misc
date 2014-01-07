@@ -1,4 +1,4 @@
-"""Proof of concept to get the SSID of the current Wlan connection on a Windows XP.
+"""Proof of concept to get the SSID of the current Wlan connection on a Windows XP or Vista.
 
 It uses the wlanapiwrapper module.
 
@@ -23,11 +23,11 @@ class WlanConnInfo:
     If an error occurs while getting the handle, it will raise a WlanConnError.
     """
    
-    # Opens handle for Wlan API
-    CLIENT_VERSION_XP = 1
+    # Opens handle for Wlan API: XP = 1, Vista = 2
+    CLIENT_VERSION = 2
     self.hClient = HANDLE()
     currentVersion = DWORD()
-    ret = WlanOpenHandle(CLIENT_VERSION_XP, None, byref(currentVersion), byref(self.hClient))
+    ret = WlanOpenHandle(CLIENT_VERSION, None, byref(currentVersion), byref(self.hClient))
     if ret != ERROR_SUCCESS:
       raise WlanConnError(FormatError(ret))
 

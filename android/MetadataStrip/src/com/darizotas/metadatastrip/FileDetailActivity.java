@@ -1,9 +1,12 @@
 package com.darizotas.metadatastrip;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.NavUtils;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 
 /**
@@ -47,6 +50,14 @@ public class FileDetailActivity extends FragmentActivity {
 	}
 
 	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+	    // Inflate the menu items for use in the action bar
+	    MenuInflater inflater = getMenuInflater();
+	    inflater.inflate(R.menu.detail_menu, menu);
+	    return super.onCreateOptionsMenu(menu);
+	}
+
+	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 		case android.R.id.home:
@@ -60,6 +71,21 @@ public class FileDetailActivity extends FragmentActivity {
 			NavUtils.navigateUpTo(this,
 					new Intent(this, FileListActivity.class));
 			return true;
+			
+//		case R.id.share:
+
+		case R.id.location:
+			Uri geoLocation = ((FileDetailFragment) getSupportFragmentManager().findFragmentById(
+				R.id.file_detail_container)).getUriGeoLocation();
+
+			if (geoLocation != null) {
+			    Intent intent = new Intent(Intent.ACTION_VIEW);
+			    intent.setData(geoLocation);
+			    if (intent.resolveActivity(getPackageManager()) != null) {
+			        startActivity(intent);
+			    }
+			}
+			
 		}
 		return super.onOptionsItemSelected(item);
 	}

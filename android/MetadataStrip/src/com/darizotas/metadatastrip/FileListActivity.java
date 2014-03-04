@@ -3,6 +3,9 @@ package com.darizotas.metadatastrip;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 
 /**
  * An activity representing a list of Files. This activity has different
@@ -49,6 +52,27 @@ public class FileListActivity extends FragmentActivity implements
 		// TODO: If exposing deep links into your app, handle intents here.
 	}
 
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+	    // Inflate the menu items for use in the action bar
+	    MenuInflater inflater = getMenuInflater();
+	    inflater.inflate(R.menu.list_menu, menu);
+	    return super.onCreateOptionsMenu(menu);
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+	    // Handle item selection
+	    switch (item.getItemId()) {
+	        case R.id.folder_back:
+	        	((FileListFragment) getSupportFragmentManager().findFragmentById(
+	        			R.id.file_list)).upToParent();
+	            return true;
+	        default:
+	            return super.onOptionsItemSelected(item);
+	    }
+	}
+	
 	/**
 	 * Callback method from {@link FileListFragment.Callbacks} indicating that
 	 * the item with the given PATH was selected.
@@ -74,4 +98,5 @@ public class FileListActivity extends FragmentActivity implements
 			startActivity(detailIntent);
 		}
 	}
+	
 }

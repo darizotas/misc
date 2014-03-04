@@ -2,17 +2,20 @@ package com.darizotas.metadatastrip;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
+import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.ArrayAdapter;
+import android.view.ViewGroup;
 import android.widget.ListView;
+import android.widget.SimpleAdapter;
+import android.widget.TextView;
 
-import com.darizotas.metadatastrip.filemanager.FileData;
 import com.darizotas.metadatastrip.filemanager.FileManager;
 
 /**
@@ -33,6 +36,12 @@ public class FileListFragment extends ListFragment {
 	private static final String STATE_ACTIVATED_POSITION = "activated_position";
 
 	/**
+	 * The serialization (saved instance state) Bundle key representing the
+	 * current path.
+	 */
+	private static final String STATE_CURRENT_PATH = "current_path";
+
+	/**
 	 * The fragment's current callback object, which is notified of list item
 	 * clicks.
 	 */
@@ -45,7 +54,11 @@ public class FileListFragment extends ListFragment {
 	/**
 	 * List of contents of the current directory.
 	 */
-	private List<FileData> mDirContents = new ArrayList<FileData>();
+	private List<HashMap<String, String>> mDirContents = new ArrayList<HashMap<String, String>>();
+	/**
+	 * Current path.
+	 */
+	private String mPath;
 
 	/**
 	 * A callback interface that all activities containing this fragment must
@@ -77,26 +90,8 @@ public class FileListFragment extends ListFragment {
 	}
 
 	@Override
-	public void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-
-		updateListAdapter("/");
-	}
-
-	@Override
-	public void onViewCreated(View view, Bundle savedInstanceState) {
-		super.onViewCreated(view, savedInstanceState);
-
-		// Restore the previously serialized activated item position.
-		if (savedInstanceState != null
-				&& savedInstanceState.containsKey(STATE_ACTIVATED_POSITION)) {
-			setActivatedPosition(savedInstanceState
-					.getInt(STATE_ACTIVATED_POSITION));
-		}
-	}
-
-	@Override
 	public void onAttach(Activity activity) {
+		//http://developer.android.com/guide/components/fragments.html
 		super.onAttach(activity);
 
 		// Activities containing this fragment must implement its callbacks.
@@ -108,6 +103,41 @@ public class FileListFragment extends ListFragment {
 		mCallbacks = (Callbacks) activity;
 	}
 
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+	}
+
+	@Override
+	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+		//http://developer.android.com/reference/android/app/ListFragment.html
+		// Let's instantiate my customized view.
+		return inflater.inflate(R.layout.fragment_file_list, container, false);
+	}
+	
+	@Override
+	public void onViewCreated(View view, Bundle savedInstanceState) {
+		super.onViewCreated(view, savedInstanceState);
+
+		// Restore the previously serialized activated item position.
+		if (savedInstanceState != null
+				&& savedInstanceState.containsKey(STATE_ACTIVATED_POSITION)) {
+			setActivatedPosition(savedInstanceState.getInt(STATE_ACTIVATED_POSITION));
+		}
+	}
+	
+	@Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+		//http://developer.android.com/reference/android/app/Fragment.html
+		//http://stackoverflow.com/questions/8041206/android-fragment-oncreateview-vs-onactivitycreated
+        super.onActivityCreated(savedInstanceState);
+
+        // Retrieves the current path.
+        mPath = (savedInstanceState != null && savedInstanceState.containsKey(STATE_CURRENT_PATH))? 
+        		savedInstanceState.getString(STATE_CURRENT_PATH) : "/";
+		updateListAdapter(mPath);
+	}	
+	
 	@Override
 	public void onDetach() {
 		super.onDetach();
@@ -121,16 +151,17 @@ public class FileListFragment extends ListFragment {
 			long id) {
 		super.onListItemClick(listView, view, position, id);
 
-		FileData selected = mDirContents.get(position);
-		File file = new File(selected.getPath());
+		// Retrieves the content of the current folder
+		HashMap<String, String> selected = mDirContents.get(position);
+		File file = new File(selected.get(FileManager.KEY_PATH));
 		if (file.canRead()) {
 			if (file.isDirectory()) {
-				updateListAdapter(selected.getPath());
+				updateListAdapter(file.getPath());
 
 			// Notify the active callbacks interface (the activity, if the
 			// fragment is attached to one) that a file has been selected.
 			} else {
-				mCallbacks.onItemSelected(selected.getPath());			
+				mCallbacks.onItemSelected(file.getPath());			
 			}
 		// The folder cannot be read.
 		} else {
@@ -149,6 +180,8 @@ public class FileListFragment extends ListFragment {
 			// Serialize and persist the activated item position.
 			outState.putInt(STATE_ACTIVATED_POSITION, mActivatedPosition);
 		}
+		// Serialize and persist the current path
+		outState.putString(STATE_CURRENT_PATH, mPath);
 	}
 
 	/**
@@ -178,9 +211,28 @@ public class FileListFragment extends ListFragment {
 	 * @param path Current path.
 	 */
 	private void updateListAdapter(String path) {
+		// Updates the current folder
+		mPath = path;
+		TextView currentPath = (TextView) getView().findViewById(R.id.current_path);
+		currentPath.setText(path);
+		
+		// Updates the list
 		mDirContents = FileManager.getDirContents(path);
-		setListAdapter(new ArrayAdapter<FileData>(getActivity(),
-				android.R.layout.simple_list_item_activated_1,
-				android.R.id.text1, mDirContents));		
+		String[] from = { FileManager.KEY_ICON, FileManager.KEY_FILENAME };
+		int[] to = { R.id.file_icon, R.id.file_name };
+		SimpleAdapter adapter = new SimpleAdapter(getActivity(), mDirContents, 
+				R.layout.fragment_file_row, from, to);
+		
+		setListAdapter(adapter);
 	}
+	
+	/**
+	 * Moves the current folder up to the parent.
+	 */
+	public void upToParent() {
+		File f = new File(mPath);
+		if (f.getParent() != null)
+			updateListAdapter(f.getParent());
+	}
+	
 }

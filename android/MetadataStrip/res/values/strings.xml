@@ -3,5 +3,9 @@
 
     <string name="app_name">MetadataStrip</string>
     <string name="title_file_detail">File Detail</string>
-
+    
+    <string name="empty">Empty</string>
+    
+    <string name="action_location">Location</string><string name="action_folder_back">Back</string><string name="action_share">Share</string>
+    
 </resources>

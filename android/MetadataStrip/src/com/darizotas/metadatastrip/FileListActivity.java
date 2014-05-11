@@ -1,11 +1,20 @@
+/*
+ * Copyright 2014 Dario B darizotas at gmail dot com
+ *
+ *    This software is licensed under a new BSD License.
+ *    Unported License. http://opensource.org/licenses/BSD-3-Clause
+ *
+ */
 package com.darizotas.metadatastrip;
 
+import java.io.File;
+
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
+import android.support.v4.app.FragmentManager;
 
 /**
  * An activity representing a list of Files. This activity has different
@@ -51,27 +60,6 @@ public class FileListActivity extends FragmentActivity implements
 
 		// TODO: If exposing deep links into your app, handle intents here.
 	}
-
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-	    // Inflate the menu items for use in the action bar
-	    MenuInflater inflater = getMenuInflater();
-	    inflater.inflate(R.menu.list_menu, menu);
-	    return super.onCreateOptionsMenu(menu);
-	}
-
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-	    // Handle item selection
-	    switch (item.getItemId()) {
-	        case R.id.folder_back:
-	        	((FileListFragment) getSupportFragmentManager().findFragmentById(
-	        			R.id.file_list)).upToParent();
-	            return true;
-	        default:
-	            return super.onOptionsItemSelected(item);
-	    }
-	}
 	
 	/**
 	 * Callback method from {@link FileListFragment.Callbacks} indicating that
@@ -79,6 +67,41 @@ public class FileListActivity extends FragmentActivity implements
 	 */
 	@Override
 	public void onItemSelected(String path) {
+		File file = new File(path);
+		if (file.canRead()) {
+			if (file.isDirectory()) {
+				FragmentManager manager = getSupportFragmentManager();
+				
+				if (mTwoPane) {
+					// Removes the previous detail fragment
+					Fragment fragment = manager.findFragmentById(R.id.file_detail_container);
+					if (fragment != null) {
+						manager.beginTransaction().remove(fragment).commit();
+					}
+				}
+				// Updates the list.
+				((FileListFragment) manager.findFragmentById(
+						R.id.file_list)).updateListAdapter(file.getPath());
+
+			} else {
+				showDetails(path);
+			}
+		// The folder cannot be read.
+		} else {
+			AlertDialog.Builder builder = new AlertDialog.Builder(this);
+			builder.setIcon(R.drawable.ic_launcher)
+				.setTitle("[" + file.getName() + "] " + 
+					getResources().getText(R.string.error_open_file))
+				.setPositiveButton("OK", null)
+				.show();	
+		}	
+	}
+	
+	/**
+	 * Shows the {@link FileDetailFragment file metadata details fragment} of the given file.
+	 * @param path Path to file.
+	 */
+	private void showDetails(String path) {
 		if (mTwoPane) {
 			// In two-pane mode, show the detail view in this activity by
 			// adding or replacing the detail fragment using a
@@ -98,5 +121,4 @@ public class FileListActivity extends FragmentActivity implements
 			startActivity(detailIntent);
 		}
 	}
-	
 }

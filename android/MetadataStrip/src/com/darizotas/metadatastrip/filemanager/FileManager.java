@@ -1,3 +1,10 @@
+/*
+ * Copyright 2014 Dario B darizotas at gmail dot com
+ *
+ *    This software is licensed under a new BSD License.
+ *    Unported License. http://opensource.org/licenses/BSD-3-Clause
+ *
+ */
 package com.darizotas.metadatastrip.filemanager;
 
 import java.io.File;
@@ -15,12 +22,10 @@ public class FileManager {
 	/** Path hash key. */
 	public static final String KEY_PATH = "path";
 	
-//	public static List<FileData> getDirContents(String startPath) {
 	public static List<HashMap<String, String>> getDirContents(String startPath) {
     	File path = new File(startPath);
     	File[] pathContents = path.listFiles();
     	
-//    	List<FileData> files = new ArrayList<FileData>();
 //    	http://stackoverflow.com/questions/18628831/listview-with-arraylist-simple-adapter-in-android
 //    	http://www.vogella.com/tutorials/AndroidListView/article.html
 //    	http://developer.android.com/reference/android/widget/SimpleAdapter.html
@@ -30,7 +35,6 @@ public class FileManager {
     		File file = pathContents[i];
 
     		if (file.canRead()) {
-//    			FileData data = new FileData(file.getName(), file.getPath());
     			HashMap<String, String> data = new HashMap<String, String>();
     			
     			data.put(FileManager.KEY_FILENAME, file.getName());
@@ -38,7 +42,7 @@ public class FileManager {
     			if (file.isDirectory()) {
         			data.put(FileManager.KEY_ICON, Integer.toString(R.drawable.ic_action_collection));
     			} else {
-        			data.put(FileManager.KEY_ICON, Integer.toString(R.drawable.ic_action_help));
+        			data.put(FileManager.KEY_ICON, Integer.toString(R.drawable.ic_action_search));
     			}
     			files.add(data);
     		}	

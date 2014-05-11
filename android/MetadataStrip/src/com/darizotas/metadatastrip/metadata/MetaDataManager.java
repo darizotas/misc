@@ -1,3 +1,14 @@
+/*
+ * Copyright 2014 Dario B darizotas at gmail dot com
+ *
+ *    This software is licensed under a new BSD License.
+ *    Unported License. http://opensource.org/licenses/BSD-3-Clause
+ *
+ * This file makes of third party libraries:
+ *    1. Metadata-extractor
+ *        http://drewnoakes.com/code/exif/
+ *        http://code.google.com/p/metadata-extractor/ 
+ */
 package com.darizotas.metadatastrip.metadata;
 
 import java.io.File;
@@ -36,15 +47,20 @@ public class MetaDataManager {
 	 * Contains the geo location of the file.
 	 */
 	private Location mLocation;
+	/**
+	 * Path to the file.
+	 */
+	private String mFileName;
 	
 	/**
 	 * Reads the metadata from the given file.
-	 * It makes use of external libraries such as {@link http://http://drewnoakes.com/code/exif}
 	 * @param fd File.
+	 * @see <a href="http://drewnoakes.com/code/exif">drewnoakes.com</a>
 	 */
 	public MetaDataManager(File fd) {
 		mContainer = new GroupContainer();
 		mLocation = null;
+		mFileName = fd.getName();
 		
 		try {
 			Metadata metadata = ImageMetadataReader.readMetadata(fd);
@@ -77,6 +93,14 @@ public class MetaDataManager {
 		} catch (ImageProcessingException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	/**
+	 * Returns the file name containing the metadata.
+	 * @return File name.
+	 */
+	public String getFileName() {
+		return mFileName;
 	}
 	
 	/**

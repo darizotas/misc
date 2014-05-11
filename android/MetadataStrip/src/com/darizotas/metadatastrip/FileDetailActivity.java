@@ -1,12 +1,18 @@
+/*
+ * Copyright 2014 Dario B darizotas at gmail dot com
+ *
+ *    This software is licensed under a new BSD License.
+ *    Unported License. http://opensource.org/licenses/BSD-3-Clause
+ *
+ */
 package com.darizotas.metadatastrip;
 
+import java.io.File;
+
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.NavUtils;
-import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 
 /**
@@ -18,7 +24,6 @@ import android.view.MenuItem;
  * a {@link FileDetailFragment}.
  */
 public class FileDetailActivity extends FragmentActivity {
-
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -26,6 +31,9 @@ public class FileDetailActivity extends FragmentActivity {
 
 		// Show the Up button in the action bar.
 		getActionBar().setDisplayHomeAsUpEnabled(true);
+		// Sets the title.
+		File fd = new File(getIntent().getStringExtra(FileDetailFragment.ARG_ITEM_ID));
+		getActionBar().setTitle(fd.getName());
 
 		// savedInstanceState is non-null when there is fragment state
 		// saved from previous configurations of this activity
@@ -50,14 +58,6 @@ public class FileDetailActivity extends FragmentActivity {
 	}
 
 	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-	    // Inflate the menu items for use in the action bar
-	    MenuInflater inflater = getMenuInflater();
-	    inflater.inflate(R.menu.detail_menu, menu);
-	    return super.onCreateOptionsMenu(menu);
-	}
-
-	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 		case android.R.id.home:
@@ -71,20 +71,6 @@ public class FileDetailActivity extends FragmentActivity {
 			NavUtils.navigateUpTo(this,
 					new Intent(this, FileListActivity.class));
 			return true;
-			
-//		case R.id.share:
-
-		case R.id.location:
-			Uri geoLocation = ((FileDetailFragment) getSupportFragmentManager().findFragmentById(
-				R.id.file_detail_container)).getUriGeoLocation();
-
-			if (geoLocation != null) {
-			    Intent intent = new Intent(Intent.ACTION_VIEW);
-			    intent.setData(geoLocation);
-			    if (intent.resolveActivity(getPackageManager()) != null) {
-			        startActivity(intent);
-			    }
-			}
 			
 		}
 		return super.onOptionsItemSelected(item);

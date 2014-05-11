@@ -1,3 +1,10 @@
+/*
+ * Copyright 2014 Dario B darizotas at gmail dot com
+ *
+ *    This software is licensed under a new BSD License.
+ *    Unported License. http://opensource.org/licenses/BSD-3-Clause
+ *
+ */
 package com.darizotas.metadatastrip;
 
 import java.io.File;
@@ -6,10 +13,12 @@ import java.util.HashMap;
 import java.util.List;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
@@ -106,6 +115,8 @@ public class FileListFragment extends ListFragment {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		
+		setHasOptionsMenu(true);
 	}
 
 	@Override
@@ -153,24 +164,7 @@ public class FileListFragment extends ListFragment {
 
 		// Retrieves the content of the current folder
 		HashMap<String, String> selected = mDirContents.get(position);
-		File file = new File(selected.get(FileManager.KEY_PATH));
-		if (file.canRead()) {
-			if (file.isDirectory()) {
-				updateListAdapter(file.getPath());
-
-			// Notify the active callbacks interface (the activity, if the
-			// fragment is attached to one) that a file has been selected.
-			} else {
-				mCallbacks.onItemSelected(file.getPath());			
-			}
-		// The folder cannot be read.
-		} else {
-			AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-			builder.setIcon(R.drawable.ic_launcher)
-				.setTitle("[" + file.getName() + "] can't be open!")
-				.setPositiveButton("OK", null)
-				.show();	
-		}
+		mCallbacks.onItemSelected(selected.get(FileManager.KEY_PATH));			
 	}
 
 	@Override
@@ -205,12 +199,32 @@ public class FileListFragment extends ListFragment {
 
 		mActivatedPosition = position;
 	}
+
+	@Override
+	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+	   inflater.inflate(R.menu.list_menu, menu);
+	}	
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+	    // Handle item selection
+	    switch (item.getItemId()) {
+	        case R.id.folder_back:
+	    		File f = new File(mPath);
+	    		if (f.getParent() != null)
+	    			mCallbacks.onItemSelected(f.getParent());
+
+	    		return true;
+	        default:
+	            return super.onOptionsItemSelected(item);
+	    }
+	}
 	
 	/**
 	 * Updates the current Fragment with the contents of the given path.
 	 * @param path Current path.
 	 */
-	private void updateListAdapter(String path) {
+	public void updateListAdapter(String path) {
 		// Updates the current folder
 		mPath = path;
 		TextView currentPath = (TextView) getView().findViewById(R.id.current_path);
@@ -224,15 +238,6 @@ public class FileListFragment extends ListFragment {
 				R.layout.fragment_file_row, from, to);
 		
 		setListAdapter(adapter);
-	}
-	
-	/**
-	 * Moves the current folder up to the parent.
-	 */
-	public void upToParent() {
-		File f = new File(mPath);
-		if (f.getParent() != null)
-			updateListAdapter(f.getParent());
 	}
 	
 }

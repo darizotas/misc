@@ -9,13 +9,16 @@
         style="?android:attr/textAppearanceLarge"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:padding="12dp" />
+        android:paddingLeft="12dp"
+        android:textSize="12sp"
+        android:textStyle="normal|bold" />
 
     <TextView
         android:id="@+id/tag_value"
         style="?android:attr/textAppearanceLarge"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:padding="16dp" />
+        android:paddingLeft="18dp"
+        android:textSize="12sp" />
 
 </LinearLayout>

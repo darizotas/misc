@@ -11,7 +11,8 @@
         android:layout_height="wrap_content"
         android:padding="5dp"
         android:scrollHorizontally="true"
-        android:textSize="12sp" />
+        android:textSize="12sp"
+        android:textStyle="normal|italic" />
 
 	<ListView
         android:id="@android:id/list"

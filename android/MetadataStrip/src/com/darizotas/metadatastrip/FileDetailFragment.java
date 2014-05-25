@@ -111,16 +111,22 @@ public class FileDetailFragment extends Fragment {
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
-		case R.id.location:
-			Uri geoLocation = getUriGeoLocation();
-
-			if (geoLocation != null) {
-			    Intent intent = new Intent(Intent.ACTION_VIEW);
-			    intent.setData(geoLocation);
-			    if (intent.resolveActivity(getActivity().getPackageManager()) != null) {
-			        startActivity(intent);
-			    }
-			}
+			case R.id.location:
+				Uri geoLocation = getUriGeoLocation();
+	
+				if (geoLocation != null) {
+				    Intent intent = new Intent(Intent.ACTION_VIEW);
+				    intent.setData(geoLocation);
+				    if (intent.resolveActivity(getActivity().getPackageManager()) != null) {
+				        startActivity(intent);
+				    }
+				}
+			break;
+			
+			case R.id.about:
+			    AboutDialogFragment aboutDialog = new AboutDialogFragment();
+			    aboutDialog.show(getFragmentManager(), "fragment_about_dialog");
+			break;
 		}
 		return super.onOptionsItemSelected(item);
 	}

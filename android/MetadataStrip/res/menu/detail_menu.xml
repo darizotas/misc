@@ -11,4 +11,9 @@
         android:icon="@drawable/ic_action_place" 
         android:showAsAction="ifRoom|withText" 
         android:title="@string/action_location" />
+    <item 
+        android:id="@+id/about" 
+        android:icon="@drawable/ic_action_about" 
+        android:showAsAction="ifRoom|withText" 
+        android:title="@string/action_about" />
 </menu>

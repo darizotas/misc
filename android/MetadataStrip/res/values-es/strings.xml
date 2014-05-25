@@ -6,7 +6,10 @@
     
     <string name="empty">Vacío</string>
     
-    <string name="action_location">Ubicación</string><string name="action_folder_back">Atrás</string><string name="action_share">Compartir</string>
+    <string name="action_location">Ubicación</string>
+    <string name="action_folder_back">Atrás</string>
+    <string name="action_share">Compartir</string>
+    <string name="action_about">Información</string>
     <string name="error_open_file">no se puede abrir</string>
     
 </resources>

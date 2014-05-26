@@ -77,6 +77,8 @@ public class FileListActivity extends FragmentActivity implements
 					Fragment fragment = manager.findFragmentById(R.id.file_detail_container);
 					if (fragment != null) {
 						manager.beginTransaction().remove(fragment).commit();
+						//http://stackoverflow.com/questions/7246479/android-fragmenttransaction-commit-when
+						manager.executePendingTransactions();
 					}
 				}
 				// Updates the list.

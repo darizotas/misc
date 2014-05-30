@@ -12,17 +12,27 @@
 package com.darizotas.metadatastrip.metadata;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.security.DigestInputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.xmlpull.v1.XmlSerializer;
 
 import android.location.Location;
+import android.util.Base64;
 import android.util.Xml;
 
 import com.drew.imaging.ImageMetadataReader;
@@ -51,6 +61,10 @@ public class MetaDataManager {
 	 * Path to the file.
 	 */
 	private String mFileName;
+	/**
+	 * Hash value.
+	 */
+	private String mHash;
 	
 	/**
 	 * Reads the metadata from the given file.
@@ -60,9 +74,11 @@ public class MetaDataManager {
 	public MetaDataManager(File fd) {
 		mContainer = new GroupContainer();
 		mLocation = null;
-		mFileName = fd.getName();
 		
 		try {
+			mFileName = fd.getName();
+			mHash = MetaDataManager.getSignature(fd, "SHA1");
+
 			Metadata metadata = ImageMetadataReader.readMetadata(fd);
 			for (Directory directory : metadata.getDirectories()) {
 				// Fills in the metadata structure.
@@ -126,6 +142,8 @@ public class MetaDataManager {
 	public String getMetadataXml() {
 		XmlSerializer xml = Xml.newSerializer();
 		StringWriter writer = new StringWriter();
+		// Pattern to match no printable chars.
+		Pattern p = Pattern.compile("\\p{Cntrl}");
 		
 		try {
 			xml.setOutput(writer);
@@ -133,7 +151,8 @@ public class MetaDataManager {
 		    xml.startDocument("UTF-8", true); 
 		    xml.setFeature("http://xmlpull.org/v1/doc/features.html#indent-output", true);
 			
-		    xml.startTag("", "metadata");
+		    xml.startTag("", "metadatastrip");
+		    addSignature(xml);
 		    // For each group.
 		    int groupIndex = 0;
 		    for (HashMap<String, String> group : mContainer.getGroups()) {
@@ -144,18 +163,80 @@ public class MetaDataManager {
 		    	for (HashMap<String, String> tag : mContainer.getMetadata(groupIndex++)) {
 		    		String tagName = tag.get(GroupContainer.KEY_TAG_NAME);
 		    		xml.startTag("", tagName);
-		    		xml.text(tag.get(GroupContainer.KEY_TAG_VALUE));
+		    		
+		    		String tagValue = tag.get(GroupContainer.KEY_TAG_VALUE);
+		    		// Checks whether there are no printable chars.
+		    		Matcher m = p.matcher(tagValue);
+		    		if (!m.find())
+		    			xml.text(tagValue);
+		    		else
+		    			xml.text(Base64.encodeToString(tagValue.getBytes(), Base64.DEFAULT));
+		    		
 		    		xml.endTag("", tagName);
 		    	}
 		    	
 		    	xml.endTag("", groupTag);
 		    }
 		    
-		    xml.endTag("", "metadata");
+		    xml.endTag("", "metadatastrip");
 		    xml.endDocument();
 			
 			return writer.toString();
+		} catch (IllegalArgumentException e) {
+			return "";
+		} catch (IllegalStateException e) {
+			return "";
 		} catch (IOException e) {
+			return "";
+		}
+	}
+	
+	/**
+	 * Adds the signature section: file name, hash, date/time.
+	 * @param xml Xml serializer.
+	 * @throws IOException 
+	 * @throws IllegalStateException 
+	 * @throws IllegalArgumentException 
+	 */
+	private void addSignature(XmlSerializer xml) throws IllegalArgumentException, IllegalStateException, IOException {
+		xml.startTag("", "signature");
+		
+		xml.startTag("", "filename");
+		xml.text(mFileName);
+		xml.endTag("", "filename");
+		
+		xml.startTag("", "hash");
+		xml.text(mHash);
+		xml.endTag("", "hash");
+		
+		xml.startTag("", "timestamp");
+		xml.text(DateFormat.getDateTimeInstance().format(Calendar.getInstance().getTime()));
+		xml.endTag("", "timestamp");
+		
+		xml.endTag("", "signature");
+	}
+	
+	/**
+	 * Generates the hash of the given file.
+	 * @param algo Hash algorithm
+	 * @param fd File
+	 * @return Hash value in hex.
+	 */
+	private static String getSignature(File fd, String algo) {
+		try {
+			MessageDigest digest = MessageDigest.getInstance(algo);
+			DigestInputStream in = new DigestInputStream(new FileInputStream(fd), digest);
+			byte[] bytes = digest.digest();
+		    //convert the byte to hex format
+		    StringBuffer sb = new StringBuffer("");
+		    for (int i = 0; i < bytes.length; i++) {
+		    	sb.append(Integer.toString((bytes[i] & 0xff) + 0x100, 16).substring(1));
+		    }
+		    
+		    return sb.toString();
+		} catch (NoSuchAlgorithmException e) {
+			return "";
+		} catch (FileNotFoundException e) {
 			return "";
 		}
 	}

@@ -11,6 +11,8 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.DateFormat;
+import java.util.Calendar;
 
 import com.darizotas.metadatastrip.metadata.GroupContainer;
 import com.darizotas.metadatastrip.metadata.MetaDataManager;
@@ -19,8 +21,8 @@ import android.content.Intent;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.FileProvider;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -48,9 +50,9 @@ public class FileDetailFragment extends Fragment {
 	 */
 	private MetaDataManager mFileMetadata = null;
 	/**
-	 * Path to the extracted metadata.
+	 * File with the extracted metadata.
 	 */
-	private String mPath = null;
+	private File mStripFile = null;
 
 	/**
 	 * Mandatory empty constructor for the fragment manager to instantiate the
@@ -67,8 +69,6 @@ public class FileDetailFragment extends Fragment {
 		if (getArguments().containsKey(ARG_ITEM_ID)) {
 			File file = new File(getArguments().getString(ARG_ITEM_ID));
 			mFileMetadata = new MetaDataManager(file);
-			mPath = Environment.getExternalStorageDirectory().getPath() + "/" +
-					file.getName() + "_metadata.xml";
 
 			setHasOptionsMenu(true);
 		}
@@ -95,8 +95,8 @@ public class FileDetailFragment extends Fragment {
 	    // http://developer.android.com/training/sharing/shareaction.html
 	    MenuItem item = menu.findItem(R.id.share);
 	    ShareActionProvider provider = (ShareActionProvider)item.getActionProvider();
-	    if (provider != null) {
-	        provider.setShareIntent(getShareIntent());
+	    if (provider != null && mFileMetadata != null) {
+	        provider.setShareIntent(getShareIntent(mFileMetadata));
 	    }
 	}
 	
@@ -135,41 +135,63 @@ public class FileDetailFragment extends Fragment {
 	public void onDetach() {
 		super.onDetach();
 		
-		File tmp = new File(mPath);
-		if (tmp.exists()) {
-			tmp.delete();
+		if (mStripFile != null && mStripFile.exists()) {
+			mStripFile.delete();
 		}
 	}
 	
-	private Intent getShareIntent() {
+	/**
+	 * Creates the Share Intent that contains the 
+	 * @param metadataFile File with metadata.
+	 * @return Intent for sharing.
+	 */
+	private Intent getShareIntent(MetaDataManager manager) {
 	    Intent intent = new Intent(Intent.ACTION_SEND);
-	    // http://stackoverflow.com/questions/3272534/what-content-type-value-should-i-send-for-my-xml-sitemap
-	    // http://www.grauw.nl/blog/entry/489
-	    intent.setType("application/xml");
 
-	    Uri metadataFile = getUriMetadataFile();
-		if (metadataFile != null) {
-		    //intent.putExtra(Intent.EXTRA_EMAIL, addresses);
-		    //intent.putExtra(Intent.EXTRA_SUBJECT, subject);
-		    intent.putExtra(Intent.EXTRA_STREAM, metadataFile);
+	    intent.putExtra(Intent.EXTRA_SUBJECT, "[" + getResources().getString(R.string.app_name) + "] " +
+	    		getResources().getString(R.string.share_subject) + " " + manager.getFileName());
+	    intent.putExtra(Intent.EXTRA_TEXT, getResources().getString(R.string.share_text) + " " + 
+	    	DateFormat.getDateTimeInstance().format(Calendar.getInstance().getTime()));
+	    
+		try {
+		    // http://stackoverflow.com/questions/3272534/what-content-type-value-should-i-send-for-my-xml-sitemap
+		    // http://www.grauw.nl/blog/entry/489
+		    intent.setType("application/xml");
+		    //https://developer.android.com/training/sharing/send.html#send-binary-content
+		    //https://developer.android.com/reference/android/support/v4/content/FileProvider.html
+		    mStripFile = getMetadataFile(manager);
+		    Uri uri = FileProvider.getUriForFile(getActivity(), "com.darizotas.metadatastrip", mStripFile);
+		    intent.putExtra(Intent.EXTRA_STREAM, uri);
+			
+		} catch (IllegalArgumentException e) {
+			// Invalidates the intent.
+		    intent.setType(null);
 		}
 		return intent;
 	}
 
 	/**
-	 * Returns the URI pointing to the file that contains the metadata from the selected file.
-	 * @return Uri to the metadata file.
+	 * Returns the file that contains the extracted metadata.
+	 * @param manager Metadata manager.
+	 * @return File File with the extracted metadata.
 	 */
-	private Uri getUriMetadataFile() {
-		if (mPath == null)
-			return null;
-		
+	private File getMetadataFile(MetaDataManager manager) {
 		try {
-			BufferedWriter out = new BufferedWriter(new FileWriter(mPath));
-			out.write(mFileMetadata.getMetadataXml());
-			out.close();
+			//Though External SD Card is preferred, internal files dir must be used.
+			//http://stackoverflow.com/questions/20455035/illegalargumentexception-faild-to-find-configuration-root-that-contains-xxx-on
+			//https://code.google.com/p/android/issues/detail?id=61170
+			File path = new File(getActivity().getFilesDir(), "striped");
+			//Let's create the path if it does not exist.
+			if (path.mkdirs() || path.isDirectory()) {
+				File file = new File(path, manager.getFileName() + "_metadatastrip.xml");
+				BufferedWriter out = new BufferedWriter(new FileWriter(file));
+				out.write(manager.getMetadataXml());
+				out.close();
+				
+				return file;
+			} else
+				return null;
 			
-			return Uri.parse(mPath);
 		} catch (IOException e) {
 			return null;
 		}

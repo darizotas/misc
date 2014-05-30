@@ -11,5 +11,7 @@
     <string name="action_share">Share</string>
     <string name="action_about">About</string>
     <string name="error_open_file">cannot be opened</string>
+    <string name="share_text">metadata extracted on</string>
+    <string name="share_subject">metadata extracted from</string>
     
 </resources>

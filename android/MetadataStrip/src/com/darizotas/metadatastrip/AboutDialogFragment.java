@@ -42,10 +42,9 @@ public class AboutDialogFragment extends DialogFragment {
         tv.setMovementMethod(new ScrollingMovementMethod());
         
         tv.setText(getLicense(License.LIC_METADATASTRIP) +
-        	"\n\nThird party license agreements\n" +
-        	    "------------------------------\n\n" +
+        	"\n\n*** Third party license agreements ***\n\n" +
         	getLicense(License.LIC_METADATAEXTRACTOR) +
-        	"\n\n-----\n\n" +
+        	"\n\n*** ***\n\n" +
         	getLicense(License.LIC_HOPSTARTER)
         );
 
@@ -79,7 +78,7 @@ public class AboutDialogFragment extends DialogFragment {
 		    	"http://code.google.com/p/darizotas";	
 
 	   case LIC_METADATAEXTRACTOR:
-		   return "This software makes use of the metadata-extractor library, licensed as\n" +
+		   return "This software makes use of the metadata-extractor v2.6.4 library, licensed as\n" +
 	        	"Copyright 2002-2012 Drew Noakes\n" +
 	        	"Licensed under the Apache License, Version 2.0 (the \"License\"); " +
 	        	"you may not use this file except in compliance with the License.\n" +

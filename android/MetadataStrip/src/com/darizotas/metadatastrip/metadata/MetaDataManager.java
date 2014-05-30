@@ -11,12 +11,12 @@
  */
 package com.darizotas.metadatastrip.metadata;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.StringWriter;
-import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.DateFormat;
@@ -221,12 +221,21 @@ public class MetaDataManager {
 	 * @param algo Hash algorithm
 	 * @param fd File
 	 * @return Hash value in hex.
+	 * @see http://www.mkyong.com/java/how-to-generate-a-file-checksum-value-in-java/
 	 */
 	private static String getSignature(File fd, String algo) {
 		try {
+			
 			MessageDigest digest = MessageDigest.getInstance(algo);
-			DigestInputStream in = new DigestInputStream(new FileInputStream(fd), digest);
+			BufferedInputStream in = new BufferedInputStream(new FileInputStream(fd));
+		    byte[] dataBytes = new byte[1024];
+		    int nread = 0; 
+		    while ((nread = in.read(dataBytes)) != -1) {
+		    	digest.update(dataBytes, 0, nread);
+		    }
+		    in.close();
 			byte[] bytes = digest.digest();
+			
 		    //convert the byte to hex format
 		    StringBuffer sb = new StringBuffer("");
 		    for (int i = 0; i < bytes.length; i++) {
@@ -237,6 +246,8 @@ public class MetaDataManager {
 		} catch (NoSuchAlgorithmException e) {
 			return "";
 		} catch (FileNotFoundException e) {
+			return "";
+		} catch (IOException e) {
 			return "";
 		}
 	}

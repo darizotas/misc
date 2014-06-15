@@ -15,8 +15,12 @@ import java.text.DateFormat;
 import java.util.Calendar;
 
 import com.darizotas.metadatastrip.metadata.GroupContainer;
+import com.darizotas.metadatastrip.metadata.MetaDataContainer;
 import com.darizotas.metadatastrip.metadata.MetaDataManager;
+import com.darizotas.metadatastrip.metadata.extractor.MetaDataExtractorProxy;
+import com.darizotas.metadatastrip.metadata.extractor.MetadataProcessingException;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.location.Location;
 import android.net.Uri;
@@ -48,7 +52,7 @@ public class FileDetailFragment extends Fragment {
 	/**
 	 * The metadata associated to the file that this fragment is presenting.
 	 */
-	private MetaDataManager mFileMetadata = null;
+	private MetaDataContainer mFileMetadata = null;
 	/**
 	 * File with the extracted metadata.
 	 */
@@ -68,7 +72,36 @@ public class FileDetailFragment extends Fragment {
 		// Initializes the metadata from the selected file.
 		if (getArguments().containsKey(ARG_ITEM_ID)) {
 			File file = new File(getArguments().getString(ARG_ITEM_ID));
-			mFileMetadata = new MetaDataManager(file);
+			
+			MetaDataExtractorProxy proxy = 
+				MetaDataExtractorProxy.getInstance(getActivity().getContentResolver());
+			mFileMetadata = null;
+			try {
+				mFileMetadata = proxy.extract(file);
+				
+			// Error opening the file.
+			} catch (IOException e) {
+				AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+				builder.setIcon(R.drawable.ic_launcher)
+					.setTitle("[" + file.getName() + "] " + 
+						getResources().getText(R.string.error_open_file))
+					.setPositiveButton("OK", null)
+					.show();
+			// Error processing metadata.
+			} catch (MetadataProcessingException e) {
+				AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+				builder.setIcon(R.drawable.ic_launcher)
+					.setTitle("[" + file.getName() + "] " + 
+						getResources().getText(R.string.error_process_file) +
+						e.getMessage())
+					.setPositiveButton("OK", null)
+					.show();	
+			}
+			
+			
+			
+			
+			//mFileMetadata = new MetaDataManager(file);
 
 			setHasOptionsMenu(true);
 		}
@@ -142,14 +175,14 @@ public class FileDetailFragment extends Fragment {
 	
 	/**
 	 * Creates the Share Intent that contains the 
-	 * @param metadataFile File with metadata.
+	 * @param container Metadata container.
 	 * @return Intent for sharing.
 	 */
-	private Intent getShareIntent(MetaDataManager manager) {
+	private Intent getShareIntent(MetaDataContainer container) {
 	    Intent intent = new Intent(Intent.ACTION_SEND);
 
 	    intent.putExtra(Intent.EXTRA_SUBJECT, "[" + getResources().getString(R.string.app_name) + "] " +
-	    		getResources().getString(R.string.share_subject) + " " + manager.getFileName());
+	    		getResources().getString(R.string.share_subject) + " " + container.getFileName());
 	    intent.putExtra(Intent.EXTRA_TEXT, getResources().getString(R.string.share_text) + " " + 
 	    	DateFormat.getDateTimeInstance().format(Calendar.getInstance().getTime()));
 	    
@@ -159,7 +192,7 @@ public class FileDetailFragment extends Fragment {
 		    intent.setType("application/xml");
 		    //https://developer.android.com/training/sharing/send.html#send-binary-content
 		    //https://developer.android.com/reference/android/support/v4/content/FileProvider.html
-		    mStripFile = getMetadataFile(manager);
+		    mStripFile = getMetadataFile(container);
 		    Uri uri = FileProvider.getUriForFile(getActivity(), "com.darizotas.metadatastrip", mStripFile);
 		    intent.putExtra(Intent.EXTRA_STREAM, uri);
 			
@@ -172,10 +205,10 @@ public class FileDetailFragment extends Fragment {
 
 	/**
 	 * Returns the file that contains the extracted metadata.
-	 * @param manager Metadata manager.
+	 * @param container Metadata container.
 	 * @return File File with the extracted metadata.
 	 */
-	private File getMetadataFile(MetaDataManager manager) {
+	private File getMetadataFile(MetaDataContainer container) {
 		try {
 			//Though External SD Card is preferred, internal files dir must be used.
 			//http://stackoverflow.com/questions/20455035/illegalargumentexception-faild-to-find-configuration-root-that-contains-xxx-on
@@ -183,9 +216,9 @@ public class FileDetailFragment extends Fragment {
 			File path = new File(getActivity().getFilesDir(), "striped");
 			//Let's create the path if it does not exist.
 			if (path.mkdirs() || path.isDirectory()) {
-				File file = new File(path, manager.getFileName() + "_metadatastrip.xml");
+				File file = new File(path, container.getFileName() + "_metadatastrip.xml");
 				BufferedWriter out = new BufferedWriter(new FileWriter(file));
-				out.write(manager.getMetadataXml());
+				out.write(container.toXmlString());
 				out.close();
 				
 				return file;

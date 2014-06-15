@@ -25,7 +25,7 @@ import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
 
-import com.darizotas.metadatastrip.filemanager.FileManager;
+import com.darizotas.metadatastrip.file.FileManager;
 
 /**
  * A list fragment representing a list of Files. This fragment also supports

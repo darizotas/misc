@@ -11,7 +11,7 @@
     <string name="action_share">Compartir</string>
     <string name="action_about">Información</string>
     <string name="error_open_file">no se puede abrir</string>
-    <string name="share_text">metadatos extraidos el </string>
+    <string name="error_process_file">Error inesperado. Más detalles:</string>
+    <string name="share_text">metadatos extraidos el</string>
     <string name="share_subject">metadatos extraidos de</string>
-    
 </resources>

@@ -73,8 +73,7 @@ public class FileDetailFragment extends Fragment {
 		if (getArguments().containsKey(ARG_ITEM_ID)) {
 			File file = new File(getArguments().getString(ARG_ITEM_ID));
 			
-			MetaDataExtractorProxy proxy = 
-				MetaDataExtractorProxy.getInstance(getActivity().getContentResolver());
+			MetaDataExtractorProxy proxy = MetaDataExtractorProxy.getInstance();
 			mFileMetadata = null;
 			try {
 				mFileMetadata = proxy.extract(file);
@@ -92,15 +91,11 @@ public class FileDetailFragment extends Fragment {
 				AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 				builder.setIcon(R.drawable.ic_launcher)
 					.setTitle("[" + file.getName() + "] " + 
-						getResources().getText(R.string.error_process_file) +
+						getResources().getText(R.string.error_process_file) + "\n" +
 						e.getMessage())
 					.setPositiveButton("OK", null)
 					.show();	
 			}
-			
-			
-			
-			
 			//mFileMetadata = new MetaDataManager(file);
 
 			setHasOptionsMenu(true);

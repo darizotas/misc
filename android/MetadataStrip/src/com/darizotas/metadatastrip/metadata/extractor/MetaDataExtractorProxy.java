@@ -3,10 +3,9 @@ package com.darizotas.metadatastrip.metadata.extractor;
 import java.io.File;
 import java.io.IOException;
 
+import com.darizotas.metadatastrip.file.Utils;
 import com.darizotas.metadatastrip.metadata.MetaDataContainer;
 
-import android.content.ContentResolver;
-import android.net.Uri;
 import android.util.SparseArray;
 
 public class MetaDataExtractorProxy {
@@ -17,33 +16,24 @@ public class MetaDataExtractorProxy {
 	private SparseArray<AbstractMetaDataExtractor> mListExtractor;
 
 	/**
-	 * Content resolver.
-	 */
-	private ContentResolver mResolver; 
-	
-	
-	/**
 	 * Unique instance of the proxy.
 	 */
 	private static MetaDataExtractorProxy instance;
 	
 	/**
 	 * Constructor hidden.
-	 * @param cr Content Resolver used for getting the mime type.
 	 */
-	private MetaDataExtractorProxy(ContentResolver cr) {
-		mResolver = cr;
+	private MetaDataExtractorProxy() {
 		mListExtractor = new SparseArray<AbstractMetaDataExtractor>();
 	}
 	
 	/**
 	 * Singletone pattern
-	 * @param cr Content resolver for getting the mime type.
 	 * @return The proxy instance.
 	 */
-	public static final MetaDataExtractorProxy getInstance(ContentResolver cr) {
+	public static final MetaDataExtractorProxy getInstance() {
 		if (instance == null) {
-			instance = new MetaDataExtractorProxy(cr);
+			instance = new MetaDataExtractorProxy();
 		}
 		return instance;
 	}
@@ -55,11 +45,10 @@ public class MetaDataExtractorProxy {
 	 * @throws MetadataProcessingException
 	 */
 	public MetaDataContainer extract(File file) throws IOException, MetadataProcessingException {
-		Uri uri = Uri.fromFile(file);
-		AbstractMetaDataExtractor extractor = getExtractor(mResolver.getType(uri));
+		AbstractMetaDataExtractor extractor = getExtractor(Utils.getMimeType(file));
 		// Format not supported
 		if (extractor == null) {
-			String msg = "File format not supported.";
+			String msg = "File format not supported. Please, help me to improve. Notify it!";
 			throw new MetadataProcessingException(msg);
 		}
 		// Extracts the metadata
@@ -76,12 +65,14 @@ public class MetaDataExtractorProxy {
 	 */
 	private AbstractMetaDataExtractor getExtractor(String mime) {
 		AbstractMetaDataExtractor extractor = null;
-		// Images.
-		if (mime.contains("image")) {
-			extractor = mListExtractor.get(0);
-			if (extractor == null) {
-				extractor = new ImageMetaDataExtractor();
-				mListExtractor.put(0, extractor);
+		if (mime != null) {
+			// Images.
+			if (mime.contains("image")) {
+				extractor = mListExtractor.get(0);
+				if (extractor == null) {
+					extractor = new ImageMetaDataExtractor();
+					mListExtractor.put(0, extractor);
+				}
 			}
 		}
 		

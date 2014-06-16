@@ -15,6 +15,9 @@ import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+import android.net.Uri;
+import android.webkit.MimeTypeMap;
+
 /**
  * Class with miscellaneous helpful methods.
  * @author dario
@@ -57,4 +60,20 @@ public class Utils {
 		}
 	}
 
+	/**
+	 * Returns the mime type of the given file.
+	 * @param file File.
+	 * @return Mime type or null if not found.
+	 */
+	public static String getMimeType(File file) {
+	    String type = null;
+
+	    Uri uri = Uri.fromFile(file);
+	    String extension = MimeTypeMap.getFileExtensionFromUrl(uri.toString().toLowerCase());
+	    if (extension != null) {
+	        MimeTypeMap mime = MimeTypeMap.getSingleton();
+	        type = mime.getMimeTypeFromExtension(extension);
+	    }
+	    return type;
+	}
 }

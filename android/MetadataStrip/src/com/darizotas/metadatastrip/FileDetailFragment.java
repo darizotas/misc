@@ -16,7 +16,6 @@ import java.util.Calendar;
 
 import com.darizotas.metadatastrip.metadata.GroupContainer;
 import com.darizotas.metadatastrip.metadata.MetaDataContainer;
-import com.darizotas.metadatastrip.metadata.MetaDataManager;
 import com.darizotas.metadatastrip.metadata.extractor.MetaDataExtractorProxy;
 import com.darizotas.metadatastrip.metadata.extractor.MetadataProcessingException;
 
@@ -96,7 +95,6 @@ public class FileDetailFragment extends Fragment {
 					.setPositiveButton("OK", null)
 					.show();	
 			}
-			//mFileMetadata = new MetaDataManager(file);
 
 			setHasOptionsMenu(true);
 		}

@@ -90,8 +90,8 @@ public class FileDetailFragment extends Fragment {
 				AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 				builder.setIcon(R.drawable.ic_launcher)
 					.setTitle("[" + file.getName() + "] " + 
-						getResources().getText(R.string.error_process_file) + "\n" +
-						e.getMessage())
+						getResources().getText(R.string.error_process_file))
+					.setMessage(e.getMessage())
 					.setPositiveButton("OK", null)
 					.show();	
 			}

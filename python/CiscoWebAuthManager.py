@@ -11,78 +11,149 @@ from wlanapi.wlanapiwrapper import *
 from wlanapi.wlanconninfo import *
 from webauth.CiscoWebAuth import *
 import sys
+import argparse
 
+class CiscoWebAuthManager:
+    """Class responsible for loging-in/out from wireless networks managed by Cisco Web Authentication.
+    """
 
-#Main
-if len(sys.argv) == 5:
-  # Checks if it is connected to the given wireless.
-  # Retrieves the ssid name.
-  ssid = sys.argv[1]
-  try:
-    info = WlanConnInfo()
-    connected = info.isConnected(ssid)
-  except WlanConnError as err:
-    del info
-    print err
-    sys.exit(1)
-  # The Wlan handles are no longer needed.
-  del info
-  
-  if connected:
-    print "Associated to %s. Let's establish a session." % ssid
+    def __init__(self):
+        """Initialises the class."""
+        self.crawler = CiscoWebAuthCrawler()
 
-    # Retrieves host, username and password.
-    host = sys.argv[2]
-    username = sys.argv[3]
-    password = sys.argv[4]
-    # Prepares the HTTPS request
-    connection = httplib.HTTPSConnection(host)
-    url = "/login.html"
-    params = urllib.urlencode({\
-      'buttonClicked': 4, \
-      'err_flag': 0, 'err_msg': '', 'info_flag': 0, 'info_msg': '', \
-      'redirect_url': '', 'username': username, 'password': password \
-      })
-    headers = {\
-      'Content-Type': 'application/x-www-form-urlencoded', \
-    }
-    print "Connecting Cisco Web Authentication..."
-    try:
-      connection.request("POST", url, params, headers)
-      response = connection.getresponse()
-    except (httplib.HTTPException, socket.error) as ex:
-      print ex
-      sys.exit(1)
+    def isConnected(self, ssid):
+        """Returns true whether it is currently connected to the Wlan identified by the given
+        ssid.
+        """
+        try:
+            info = WlanConnInfo()
+            connected = info.isConnected(ssid)
+            del info
+            return connected
+        except WlanConnError as err:
+            del info
+            print err
+            return False
+            
+    def _parseError(self, body):
+        """Checks for an error or informative message"""
 
-    # 100 Continue.
-    if response.status == 200:
-      body = response.read()
-      # Replaces new lines.
-#      body = body.replace("\r\n", "").replace("\n", "")
-      parser = CiscoWebAuthParser()
-      if parser.isConnected(body):
-        print 'Session restablished!'
-      else:
-        # Check for an error.
-        msg = parser.getMessage(body, 'err')
+        msg = self.crawler.getMessage(body, 'err')
         if msg:
-          print msg
-        else:
-          # Check whether for an informative message.
-          msg = parser.getMessage(body, 'info')
-          if msg:
             print msg
-          else:
-            print 'I don\'t know how we arrived here. Check the Web:'
-            print body
+        else:
+            # Check whether for an informative message.
+            msg = self.crawler.getMessage(body, 'info')
+            if msg:
+                print msg
+            else:
+                print 'I don\'t know how we arrived here. Check the Web:'
+                print body
+        
+    def login(self, host, username, password):
+        """Logs in to the wireless network"""
+        
+        connection = httplib.HTTPSConnection(host)
+        url = "/login.html"
+        params = urllib.urlencode({\
+            'buttonClicked': 4, \
+            'err_flag': 0, 'err_msg': '', 'info_flag': 0, 'info_msg': '', \
+            'redirect_url': '', 'username': username, 'password': password \
+            })
+        headers = {\
+            'Content-Type': 'application/x-www-form-urlencoded', \
+        }
+        
+        print "Connecting Cisco Web Authentication..."
+        try:
+            connection.request("POST", url, params, headers)
+            response = connection.getresponse()
+        except (httplib.HTTPException, socket.error) as ex:
+            print ex
+            return False
+
+        # 100 Continue.
+        if response.status == 200:
+            body = response.read()
+            if self.crawler.isConnected(body):
+                print 'Session re-established!'
+            else:
+                self._parseError(body)
+        else:
+            print response.status, response.reason
+
+        connection.close() 
+        return True
+
+    def logout(self, host):
+        """Logs out from the wireless network"""
+        connection = httplib.HTTPSConnection(host)
+        url = "/logout.html"
+        params = urllib.urlencode({\
+#            'Logout': 'Logout', \
+            'err_flag': 0, 'err_msg': '', 'userStatus': 1 \
+            })
+        headers = {\
+            'Content-Type': 'application/x-www-form-urlencoded', \
+        }
+        print "Connecting Cisco Web Authentication..."
+        try:
+            connection.request("POST", url, params, headers)
+            response = connection.getresponse()
+        except (httplib.HTTPException, socket.error) as ex:
+            print ex
+            return False
+
+        # 100 Continue.
+        if response.status == 200:
+            body = response.read()
+            if self.crawler.isDisconnected(body):
+                print 'Session ended!'
+            else:
+                self._parseError(body)
+        else:
+            print response.status, response.reason
+
+        connection.close() 
+        return True
+  
+  
+# Main  
+def login(args):
+    """Wrapper function to use through argparse to login to the wireless network"""
+    manager = CiscoWebAuthManager()
+    if manager.isConnected(args.ssid):
+        if not manager.login(args.host, args.user, args.pwd):
+            sys.exit(1)
     else:
-      print response.status, response.reason
+        print "Not associated to %s. There is nothing to do." % args.ssid
 
-    connection.close()  
+def logout(args):
+    """Wrapper function to use through argparse to logout to the wireless network"""
+    manager = CiscoWebAuthManager()
+    if manager.isConnected(args.ssid):
+        if not manager.logout(args.host):
+            sys.exit(1)
+    else:
+        print "Not associated to %s. There is nothing to do." % args.ssid
     
-  else:
-    print "Not associated to %s. There is nothing to do." % ssid
+        
+# Top-level argument parser
+parser = argparse.ArgumentParser(description='Establishes a session in a wireless network managed ' \
+    'by Cisco Web Authentication.')
+# SSID wireless network param
+parser.add_argument('ssid', help='SSID name of the wireless network')
+parser.add_argument('host', help='Cisco Web Authentication hostname or IP')
+subparser = parser.add_subparsers(title='sub-commands', help='Available sub-commands')
+# Login sub-command
+parserCmdLogin = subparser.add_parser('login', help='Login request')
+parserCmdLogin.add_argument('-u', '--user', required=True, help='User name')
+parserCmdLogin.add_argument('-p', '--pwd', required=True, help='Password')
+parserCmdLogin.set_defaults(func=login)
+# Logout sub-command
+parserCmdLogout = subparser.add_parser('logout', help='Logout request')
+parserCmdLogout.set_defaults(func=logout)
 
-else:
-  print 'Usage: CiscoWebAuthManager.py ssid host username password'
-  sys.exit(2)
+args = parser.parse_args()
+args.func(args)
+sys.exit(0)

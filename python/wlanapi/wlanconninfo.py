@@ -8,6 +8,7 @@ Unported License. http://opensource.org/licenses/BSD-3-Clause
 """
 from wlanapiwrapper import *
 import sys
+import argparse
 
 class WlanConnError(Exception):
   """Exception to be thrown when an error occurs calling to the wlanapiwrapper module"""
@@ -92,17 +93,17 @@ class WlanConnInfo:
 
 # Main
 if __name__ == '__main__':
-  if sys.argv[1:]:
-    # Retrieves the ssid name.
-    ssid = sys.argv[1]
+    # Top-level argument parser
+    parser = argparse.ArgumentParser(description='Check whether you are connected to the given wireless network')
+    # SSID wireless network param
+    parser.add_argument('ssid', help='SSID name of the wireless network')
+    args = parser.parse_args()
+
     try:
-      info = WlanConnInfo()
-      if info.isConnected(ssid):
-        print "Associated to %s" % ssid
-      else:
-        print "Not associated to %s" % ssid
+        info = WlanConnInfo()
+        if info.isConnected(args.ssid):
+            print "Associated to %s" % args.ssid
+        else:
+            print "Not associated to %s" % args.ssid
     except WlanConnError as err:
-      print err
-      
-  else:
-    print 'Usage: WlanConnInfo.py SSID'
+        print err

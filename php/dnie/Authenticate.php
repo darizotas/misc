@@ -1,4 +1,16 @@
 <?php
+/**
+ * Authenticate the user by means of the DNIe.
+ * @package darizotas_php_dnie
+ * @author Dario Borreguero
+ * @version $Rev$
+ *
+ * Copyright 2014 Dario B. darizotas at gmail dot com
+ * This software is licensed under a new BSD License. 
+ * Unported License. http://opensource.org/licenses/BSD-3-Clause
+ */
+
+
 require_once (dirname(__FILE__)."/../auth/DNIeAuthenticator.php");
 
 // Not logged in yet.

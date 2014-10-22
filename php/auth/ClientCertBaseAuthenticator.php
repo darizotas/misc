@@ -3,6 +3,13 @@ require_once 'BaseAuthenticator.php';
 
 /**
  * Abstract class responsible for validating the client certificate.
+ * @package darizotas_php_auth
+ * @author Dario Borreguero
+ * @version $Rev$
+ *
+ * Copyright 2014 Dario B. darizotas at gmail dot com
+ * This software is licensed under a new BSD License. 
+ * Unported License. http://opensource.org/licenses/BSD-3-Clause
  */
 abstract class darizotas_php_auth_ClientCertBaseAuthenticator implements darizotas_php_auth_BaseAuthenticator {
     /**

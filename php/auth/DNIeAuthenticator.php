@@ -1,7 +1,17 @@
 <?php
 require_once "ClientCertBaseAuthenticator.php";
 
-
+/**
+ * This class makes use of the of DNIe to authenticate the user.
+ * It relies on querying OCSP service by means of openssl command.
+ * @package darizotas_php_auth
+ * @author Dario Borreguero
+ * @version $Rev$
+ *
+ * Copyright 2014 Dario B. darizotas at gmail dot com
+ * This software is licensed under a new BSD License. 
+ * Unported License. http://opensource.org/licenses/BSD-3-Clause
+ */
 class darizotas_php_auth_DNIeAuthenticator extends darizotas_php_auth_ClientCertBaseAuthenticator {
     private static $OPENSSL_BIN = '"C:\Program Files (x86)\Apache Software Foundation\Apache2.2\bin\openssl.exe"';
     
@@ -33,6 +43,7 @@ class darizotas_php_auth_DNIeAuthenticator extends darizotas_php_auth_ClientCert
     
     /**
      * Returns true whether the authentication process is successful with the current client certificate.
+     * @return True whether the authentication process is successful.
      */
     protected function authenticateWithCert(array $dn) {
         return true;

@@ -1,4 +1,11 @@
-
+/*
+ * Helper file to create XML HTTP Requests.
+ *
+ * Copyright 2014 Dario B. darizotas at gmail dot com
+ * This software is licensed under a new BSD License. 
+ * Unported License. http://opensource.org/licenses/BSD-3-Clause
+ */
+// Creates a simple XML HTTP Request
 function xhrSimpleRequest(method, url, user, pass, payload, target, csrf) {
     var xhrObject = createXHRObject();
  	if (xhrObject) {

@@ -8,7 +8,6 @@ session_destroy();
         <title>Logout page</title>
         <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
         <script type="text/javascript" src="xhr.js"></script>
-        <script type="text/javascript" src="clearcrendentials.js"></script>
     </head>
     <body>
         <p>
@@ -16,10 +15,15 @@ session_destroy();
         Bye!
         </p>
         <script type="text/javascript">
-            xhrSimpleRequest('get', 'dnie/ClearCredentials.php', 'dummy', 'dummy', null, null, null);
-
             //alert(document.cookie);
-            clearCacheCredentials();
+
+            // Clear HTTP Authentication and HTTPS client certificates
+            // IE6sp1 or later
+            // http://msdn.microsoft.com/en-us/library/ms536979.aspx
+            if (!document.execCommand('ClearAuthenticationCache', false)) {
+                //AJAX request to logout the user. Server will answer HTTP 401 in order to clear HTTP credentials.
+                xhrSimpleRequest('get', 'dnie/ClearCredentials.php', 'dummy', 'dummy', null, null, null);
+            }
             //alert(document.cookie);
 
             setTimeout(function(){window.location = 'Index.php';}, 1500)

@@ -6,7 +6,6 @@ Unported License. http://opensource.org/licenses/BSD-3-Clause
 """
 from wininet.wininetwrapper import *
 
-
 class WinProxySettings:
     def current(self, option):
         list = INTERNET_PER_CONN_OPTION_LIST()
@@ -22,15 +21,17 @@ class WinProxySettings:
         nSize = c_ulong(sizeof(INTERNET_PER_CONN_OPTION_LIST))
         print 'Retrieving current Internet Proxy options...'
         if InternetQueryOption(None, INTERNET_OPTION_PER_CONNECTION_OPTION, byref(list), byref(nSize)):
-            print 'Current Internet Proxy options retrieved.'
+            print '[Done]'
             return True
         else:
-            print '** Error: Internet Proxy options could not be retrieved!'
+            print '[Error] Internet Proxy options could not be retrieved!'
             return False
 
     def change(self, option):
-        if not _isValid(option):
+        print 'Checking new Internet Proxy options...'
+        if not self._check(option):
             return False
+        print '[Done]'
             
         list = INTERNET_PER_CONN_OPTION_LIST()
         # Fill in the list structure
@@ -45,7 +46,7 @@ class WinProxySettings:
         nSize = c_ulong(sizeof(INTERNET_PER_CONN_OPTION_LIST))
         print 'Updating Internet Proxy options...'
         if InternetSetOption(None, INTERNET_OPTION_PER_CONNECTION_OPTION, byref(list), nSize):
-            print 'Internet Proxy options udpated!'
+            print '[Done]'
 
             # Notifies the changes to the browser (Internet Explorer)
             InternetSetOption(None, INTERNET_OPTION_SETTINGS_CHANGED, None, 0)
@@ -53,10 +54,10 @@ class WinProxySettings:
 
             return True
         else:
-            print 'Internet Proxy options could not be updated'
+            print '[Error] Internet Proxy options could not be updated.'
             return False
             
-    def _isValid(self, option):
+    def _check(self, option):
         urlEnabled = False
         urlValid = False
         serverEnabled = False
@@ -74,5 +75,12 @@ class WinProxySettings:
             # Static server
             if (opt.dwOption == INTERNET_PER_CONN_PROXY_SERVER and len(opt.Value.pszValue) > 0):
                 serverValid = True
-            
-        return ( not urlEnabled or urlValid) and (not serverEnabled or serverValid)
+        
+        if urlEnabled and not urlValid:
+            print '[Warning] Automatic configuration option is selected, but no URL is provided. Relying on former Internet proxy settings.'
+
+        if serverEnabled and not serverValid:
+            print '[Warning] Static proxy server option is selected, but no server address is provided. Relying on former Internet proxy settings.'
+
+        #return ( not urlEnabled or urlValid) and (not serverEnabled or serverValid)
+        return True

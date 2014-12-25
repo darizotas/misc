@@ -1,4 +1,4 @@
-"""Class that manages the Internet proxy configuration.
+"""Class that manages the Internet proxy settings.
 
 Copyright 2014 Dario B. darizotas at gmail dot com
 This software is licensed under a new BSD License. 
@@ -7,7 +7,15 @@ Unported License. http://opensource.org/licenses/BSD-3-Clause
 from wininet.wininetwrapper import *
 
 class WinProxySettings:
+    """Class that manages the Internet proxy settings.
+    See also nice examples in Microsoft support and MSDN:
+    https://support.microsoft.com/kb/226473
+    http://msdn.microsoft.com/en-us/library/windows/desktop/aa385384%28v=vs.85%29.aspx
+    """
+
     def current(self, option):
+        """Returns the current Internet proxy settings.
+        """
         list = INTERNET_PER_CONN_OPTION_LIST()
         # Fill in the list structure
         list.dwSize = sizeof(INTERNET_PER_CONN_OPTION_LIST)
@@ -28,6 +36,8 @@ class WinProxySettings:
             return False
 
     def change(self, option):
+        """Changes the Internet proxy settings according to the given options.
+        """
         print 'Checking new Internet Proxy options...'
         if not self._check(option):
             return False
@@ -58,6 +68,9 @@ class WinProxySettings:
             return False
             
     def _check(self, option):
+        """Checks the proxy server address and auto-configuration URL showing a warning in case any
+        of these options is incomplete/invalid.
+        """
         urlEnabled = False
         urlValid = False
         serverEnabled = False
@@ -77,10 +90,10 @@ class WinProxySettings:
                 serverValid = True
         
         if urlEnabled and not urlValid:
-            print '[Warning] Automatic configuration option is selected, but no URL is provided. Relying on former Internet proxy settings.'
+            print '[Warning] Automatic configuration option is selected, but no URL is provided.'
 
         if serverEnabled and not serverValid:
-            print '[Warning] Static proxy server option is selected, but no server address is provided. Relying on former Internet proxy settings.'
+            print '[Warning] Static proxy server option is selected, but no server address is provided.'
 
         #return ( not urlEnabled or urlValid) and (not serverEnabled or serverValid)
         return True

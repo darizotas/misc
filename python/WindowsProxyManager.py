@@ -27,7 +27,7 @@ class WindowsProxyManager:
         option = {INTERNET_PER_CONN_FLAGS: PROXY_TYPE_DIRECT}
         self._change(option)
     
-    def current(self):
+    def current(self, file):
         """Prints current Internet proxy settings.
         """
         option = (INTERNET_PER_CONN_OPTION * 5)()
@@ -38,16 +38,35 @@ class WindowsProxyManager:
         option[4].dwOption = INTERNET_PER_CONN_AUTODISCOVERY_FLAGS
         
         if self.settings.current(option):
-            # Windows 8 raises hangs the script while trying to free the memory from the strings.
             print 'Current Internet Proxy options:'
             print 'Proxy type:          %i' % option[0].Value.dwValue
             print 'Autoconfig URL:      %s' % option[1].Value.pszValue
-            #windll.kernel32.GlobalFree(option[1].Value.pszValue)
             print 'Static Proxy server: %s' % option[2].Value.pszValue
-            #windll.kernel32.GlobalFree(option[2].Value.pszValue)
             print 'Proxy bypass URLs:   %s' % option[3].Value.pszValue
-            #windll.kernel32.GlobalFree(option[3].Value.pszValue)
             #print 'Autodetect:          %i' % option[4].Value.dwValue
+            
+            if file:
+                try:
+                    f = open(file, 'w')
+                    f.write('<settings>\n')
+                    f.write('    <type>' + str(option[0].Value.dwValue) + '</type>\n')
+                    f.write('    <url>' + ('' if option[1].Value.pszValue is None else option[1].Value.pszValue) + '</url>\n')
+                    f.write('    <proxy>' + ('' if option[2].Value.pszValue is None else option[2].Value.pszValue) + '</proxy>\n')
+                    # Parses whether the local addresses are also excluded.
+                    bypass = str(option[3].Value.pszValue)
+                    local = bypass.find('<local>')
+                    f.write('    <bypass local="' + ('1' if local > -1 else '0') + '">' + \
+                        (bypass[:local] if local > -1 else '') + '</bypass>\n')
+                    f.write('</settings>')
+                    f.close()
+                except IOError as ex:
+                    print '[Error]', ex
+            
+            # Frees memory
+            # Windows 8 raises hangs the script while trying to free the memory from the strings.
+            #windll.kernel32.GlobalFree(option[1].Value.pszValue)
+            #windll.kernel32.GlobalFree(option[2].Value.pszValue)
+            #windll.kernel32.GlobalFree(option[3].Value.pszValue)
     
     def change(self, file):
         """Changes the Internet proxy settings according to the given file.
@@ -81,14 +100,11 @@ class WindowsProxyManager:
 
                 bypass = config.xpath('/settings/bypass')
                 if len(bypass) > 0:
+                  bypassStr = '' if bypass[0].text is None else str(bypass[0].text) + ';'
                   # Local addresses to bypass.
                   bypassLocal = config.xpath('/settings/bypass/@local')
-                  bypassStr = ''
-                  if bypassLocal[0]:
-                    bypassStr = '<local>;'
-                  # Specific exclusions.
-                  if not bypass[0].text is None:
-                      bypassStr += str(bypass[0].text)
+                  if int(bypassLocal[0]):
+                    bypassStr += '<local>'
                   option[INTERNET_PER_CONN_PROXY_BYPASS] = str(bypassStr)
                 
                 # Apply changes.
@@ -123,7 +139,7 @@ class WindowsProxyManager:
 def current(args):
     """Wrapper function to use through argparse to get the current Internet Proxy settings"""
     manager = WindowsProxyManager()
-    manager.current()
+    manager.current(args.export)
 
 def disable(args):
     """Wrapper function to use through argparse to disable the Internet Proxy settings"""
@@ -142,6 +158,7 @@ parser = argparse.ArgumentParser(description='Manages the Internet Proxy setting
 subparser = parser.add_subparsers(title='sub-commands', help='Available sub-commands')
 # Current sub-command
 parserCmdCurrent = subparser.add_parser('current', help='Retrieves the current Internet Proxy settings')
+parserCmdCurrent.add_argument('-e', '--export', help='File to export current Internet Proxy settings')
 parserCmdCurrent.set_defaults(func=current)
 # Disable sub-command
 parserCmdDisable = subparser.add_parser('disable', help='Disables Internet Proxy settings')

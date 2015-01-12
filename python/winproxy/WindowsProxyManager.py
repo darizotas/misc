@@ -6,7 +6,7 @@ Unported License. http://opensource.org/licenses/BSD-3-Clause
 """
 from wininet.winproxysettings import *
 from lxml import etree
-import sys
+import sys, os
 import argparse
 
 class WindowsProxyManager:
@@ -25,7 +25,7 @@ class WindowsProxyManager:
         """
         print 'Disabling Internet Proxy...'
         option = {INTERNET_PER_CONN_FLAGS: PROXY_TYPE_DIRECT}
-        self._change(option)
+        return self._change(option)
     
     def current(self, file):
         """Prints current Internet proxy settings.
@@ -67,6 +67,10 @@ class WindowsProxyManager:
             #windll.kernel32.GlobalFree(option[1].Value.pszValue)
             #windll.kernel32.GlobalFree(option[2].Value.pszValue)
             #windll.kernel32.GlobalFree(option[3].Value.pszValue)
+            
+            return True
+        else:
+            return False
     
     def change(self, file):
         """Changes the Internet proxy settings according to the given file.
@@ -74,7 +78,8 @@ class WindowsProxyManager:
         try:
             # Schema loading.
             print 'Loading Internet Options schema...'
-            xsdDoc = etree.parse('proxy-settings.xsd')
+            xsdFile = os.path.dirname(os.path.abspath(__file__)) + '\proxy-settings.xsd'
+            xsdDoc = etree.parse(xsdFile)
             schema = etree.XMLSchema(xsdDoc)
             print '[Done]'
             
@@ -108,14 +113,15 @@ class WindowsProxyManager:
                   option[INTERNET_PER_CONN_PROXY_BYPASS] = str(bypassStr)
                 
                 # Apply changes.
-                self._change(option)
+                return self._change(option)
             else:
               print '[Error] The given Internet Proxy options does not comply with the expected schema.'
               print schema.error_log
+              return False
 
         except IOError as ex:
             print '[Error]', ex
-            
+            return False
     
     def _change(self, setting):
         """Changes the Internet proxy settings according to the options given in a dict.
@@ -133,23 +139,26 @@ class WindowsProxyManager:
             else:
                 option[num].Value.pszValue = v
     
-        self.settings.change(option)
+        return self.settings.change(option)
       
     
 def current(args):
     """Wrapper function to use through argparse to get the current Internet Proxy settings"""
     manager = WindowsProxyManager()
-    manager.current(args.export)
+    if not manager.current(args.export):
+        sys.exit(1)
 
 def disable(args):
     """Wrapper function to use through argparse to disable the Internet Proxy settings"""
     manager = WindowsProxyManager()
-    manager.disable()
+    if not manager.disable():
+        sys.exit(1)
 
 def change(args):
     """Wrapper function to use through argparse to change the Internet Proxy settings"""
     manager = WindowsProxyManager()
-    manager.change(args.file)
+    if not manager.change(args.file):
+        sys.exit(1)
     
 
     

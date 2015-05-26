@@ -32,7 +32,8 @@ session_destroy();
             // IE6sp1 or later
             // http://msdn.microsoft.com/en-us/library/ms536979.aspx
             if (!document.execCommand('ClearAuthenticationCache', false)) {
-                //AJAX request to logout the user. Server will answer HTTP 401 in order to clear HTTP credentials.
+                //FF and Chrome: AJAX request to logout the user. Server will answer HTTP 401 in order to clear HTTP credentials.
+                //Chrome: Server side is also configured to fail with client certificate.
                 xhrSimpleRequest('get', 'dnie/ClearCredentials.php', 'dummy', 'dummy', null, null, null);
             }
             //alert(document.cookie);
